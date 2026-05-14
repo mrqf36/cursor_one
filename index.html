@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>番茄钟</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="mode-tabs">
+      <button class="mode-btn active" data-mode="work">专注</button>
+      <button class="mode-btn" data-mode="shortBreak">短休息</button>
+      <button class="mode-btn" data-mode="longBreak">长休息</button>
+    </div>
+
+    <div class="timer-display">
+      <svg class="progress-ring" viewBox="0 0 260 260">
+        <circle class="progress-ring-bg" cx="130" cy="130" r="120"/>
+        <circle class="progress-ring-fill" cx="130" cy="130" r="120"/>
+      </svg>
+      <div class="time-text">
+        <span id="minutes">25</span>
+        <span class="colon">:</span>
+        <span id="seconds">00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="toggleBtn" class="btn-primary">开始</button>
+      <button id="resetBtn" class="btn-secondary">重置</button>
+    </div>
+
+    <div class="task-section">
+      <input type="text" id="taskInput" placeholder="当前任务..." />
+    </div>
+
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-value" id="completedCount">0</span>
+        <span class="stat-label">已完成</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="totalFocus">0</span>
+        <span class="stat-label">专注(分)</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
