@@ -1,9 +1,9 @@
 const { ipcRenderer } = require('electron');
 
 const MODES = {
-  work: { minutes: 25, color: '#e94560' },
-  shortBreak: { minutes: 5, color: '#0f3460' },
-  longBreak: { minutes: 15, color: '#533483' },
+  work: { minutes: 25, label: '专注模式' },
+  shortBreak: { minutes: 5, label: '短休模式' },
+  longBreak: { minutes: 15, label: '长休模式' },
 };
 
 let currentMode = 'work';
@@ -19,14 +19,20 @@ const secondsEl = document.getElementById('seconds');
 const toggleBtn = document.getElementById('toggleBtn');
 const resetBtn = document.getElementById('resetBtn');
 const modeBtns = document.querySelectorAll('.mode-btn');
-const progressRing = document.querySelector('.progress-ring-fill');
+const gaugeFill = document.querySelector('.gauge-fill');
+const gaugeTip = document.querySelector('.gauge-tip');
+const modeNameEl = document.getElementById('modeName');
+const sessionNumEl = document.getElementById('sessionNum');
 const completedCountEl = document.getElementById('completedCount');
 const totalFocusEl = document.getElementById('totalFocus');
+const knobIcon = toggleBtn.querySelector('.knob-icon');
+const knobLabel = toggleBtn.querySelector('.knob-label');
 
-const CIRCUMFERENCE = 2 * Math.PI * 120;
-progressRing.style.strokeDasharray = `${CIRCUMFERENCE} ${CIRCUMFERENCE}`;
+const GAUGE_LENGTH = Math.PI * 120;
+gaugeFill.style.strokeDasharray = `${GAUGE_LENGTH} ${GAUGE_LENGTH}`;
 
 updateStats();
+updateSessionNum();
 
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
@@ -39,10 +45,20 @@ function updateDisplay() {
   minutesEl.textContent = m;
   secondsEl.textContent = s;
 
-  const offset = CIRCUMFERENCE - (timeLeft / totalTime) * CIRCUMFERENCE;
-  progressRing.style.strokeDashoffset = offset;
+  const ratio = timeLeft / totalTime;
+  const offset = GAUGE_LENGTH - ratio * GAUGE_LENGTH;
+  gaugeFill.style.strokeDashoffset = offset;
 
-  document.title = `${m}:${s} - 番茄钟`;
+  // 旋转 gauge tip：弧线是上半圆，逆时针从正左到正右
+  const angle = -180 * (1 - ratio);
+  gaugeTip.setAttribute('transform', `rotate(${angle}, 150, 150)`);
+
+  document.title = `${m}:${s} - Chronos`;
+}
+
+function updateSessionNum() {
+  const num = completedSessions + 1;
+  sessionNumEl.textContent = String(num).padStart(2, '0');
 }
 
 function switchMode(mode) {
@@ -51,13 +67,18 @@ function switchMode(mode) {
   timeLeft = totalTime;
   isRunning = false;
   clearInterval(timerInterval);
-  toggleBtn.textContent = '开始';
 
   modeBtns.forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
 
-  progressRing.style.stroke = MODES[mode].color;
+  document.body.setAttribute('data-mode', mode);
+  modeNameEl.textContent = MODES[mode].label;
+
+  toggleBtn.classList.remove('pulse-glow');
+  knobIcon.textContent = '▶';
+  knobLabel.textContent = '开始';
+
   updateDisplay();
 }
 
@@ -81,7 +102,9 @@ function notify(title, body) {
 function onComplete() {
   isRunning = false;
   clearInterval(timerInterval);
-  toggleBtn.textContent = '开始';
+  knobIcon.textContent = '▶';
+  knobLabel.textContent = '开始';
+  toggleBtn.classList.add('pulse-glow');
   playBeep();
 
   if (currentMode === 'work') {
@@ -90,6 +113,7 @@ function onComplete() {
     localStorage.setItem('completedSessions', completedSessions);
     localStorage.setItem('totalFocusMinutes', totalFocusMinutes);
     updateStats();
+    updateSessionNum();
     notify('专注完成！', '该休息一下了');
   } else {
     notify('休息结束！', '准备好开始新的专注了吗？');
@@ -105,14 +129,23 @@ function tick() {
 }
 
 function toggleTimer() {
+  if (timeLeft <= 0) {
+    resetTimer();
+    return;
+  }
+
   if (isRunning) {
     clearInterval(timerInterval);
     isRunning = false;
-    toggleBtn.textContent = '继续';
+    knobIcon.textContent = '▶';
+    knobLabel.textContent = '继续';
+    toggleBtn.classList.remove('pulse-glow');
   } else {
     timerInterval = setInterval(tick, 1000);
     isRunning = true;
-    toggleBtn.textContent = '暂停';
+    knobIcon.textContent = '⏸';
+    knobLabel.textContent = '暂停';
+    toggleBtn.classList.remove('pulse-glow');
   }
 }
 
@@ -120,7 +153,9 @@ function resetTimer() {
   clearInterval(timerInterval);
   isRunning = false;
   timeLeft = totalTime;
-  toggleBtn.textContent = '开始';
+  knobIcon.textContent = '▶';
+  knobLabel.textContent = '开始';
+  toggleBtn.classList.remove('pulse-glow');
   updateDisplay();
 }
 
@@ -138,4 +173,6 @@ modeBtns.forEach(btn => {
   });
 });
 
+// 初始化
+document.body.setAttribute('data-mode', 'work');
 updateDisplay();

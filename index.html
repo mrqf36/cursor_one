@@ -4,35 +4,78 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>番茄钟</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,600;1,400&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div class="ambient-glow"></div>
+  <div class="grain-overlay"></div>
+
   <div class="container">
+    <header class="app-header">
+      <h1 class="app-title">Chronos</h1>
+      <span class="app-subtitle">精密计时仪</span>
+    </header>
+
     <div class="mode-tabs">
-      <button class="mode-btn active" data-mode="work">专注</button>
-      <button class="mode-btn" data-mode="shortBreak">短休息</button>
-      <button class="mode-btn" data-mode="longBreak">长休息</button>
+      <button class="mode-btn active" data-mode="work">
+        <span class="mode-indicator"></span>
+        <span class="mode-label">专注</span>
+      </button>
+      <button class="mode-btn" data-mode="shortBreak">
+        <span class="mode-indicator"></span>
+        <span class="mode-label">短休</span>
+      </button>
+      <button class="mode-btn" data-mode="longBreak">
+        <span class="mode-indicator"></span>
+        <span class="mode-label">长休</span>
+      </button>
     </div>
 
     <div class="timer-display">
-      <svg class="progress-ring" viewBox="0 0 260 260">
-        <circle class="progress-ring-bg" cx="130" cy="130" r="120"/>
-        <circle class="progress-ring-fill" cx="130" cy="130" r="120"/>
+      <svg class="progress-gauge" viewBox="0 0 300 170" preserveAspectRatio="xMidYMax meet">
+        <defs>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        <path class="gauge-bg" d="M 30 150 A 120 120 0 0 0 270 150" />
+        <path class="gauge-fill" d="M 30 150 A 120 120 0 0 0 270 150" filter="url(#glow)" />
+        <circle class="gauge-tip" cx="30" cy="150" r="5" />
       </svg>
       <div class="time-text">
         <span id="minutes">25</span>
         <span class="colon">:</span>
         <span id="seconds">00</span>
       </div>
+      <div class="time-decoration">
+        <span class="mode-name" id="modeName">专注模式</span>
+        <span class="session-mark">SESSION <span id="sessionNum">01</span></span>
+      </div>
     </div>
 
     <div class="controls">
-      <button id="toggleBtn" class="btn-primary">开始</button>
-      <button id="resetBtn" class="btn-secondary">重置</button>
+      <button id="toggleBtn" class="btn-knob primary">
+        <span class="knob-icon">▶</span>
+        <span class="knob-label">开始</span>
+      </button>
+      <button id="resetBtn" class="btn-knob secondary">
+        <span class="knob-icon">↺</span>
+        <span class="knob-label">重置</span>
+      </button>
     </div>
 
     <div class="task-section">
-      <input type="text" id="taskInput" placeholder="当前任务..." />
+      <div class="task-frame">
+        <input type="text" id="taskInput" placeholder="当前专注任务..." />
+        <div class="task-line"></div>
+      </div>
     </div>
 
     <div class="stats">
@@ -40,6 +83,7 @@
         <span class="stat-value" id="completedCount">0</span>
         <span class="stat-label">已完成</span>
       </div>
+      <div class="stat-divider"></div>
       <div class="stat-item">
         <span class="stat-value" id="totalFocus">0</span>
         <span class="stat-label">专注(分)</span>
