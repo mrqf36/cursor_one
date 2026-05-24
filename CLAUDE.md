@@ -1,39 +1,65 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+降低常见 LLM 编码错误的行为准则。可根据具体项目需求进行合并调整。
+**权衡取舍**：这些准则倾向于“谨慎”而非“速度”。对于微不足道的任务，请自行判断使用。
 
-## Language Preference
 
-Always communicate in Chinese (中文) when responding to the user, including explanations, summaries, and commit messages.
+## 1.  编码前先思考
 
-## Project Overview
+**不要假设。不要掩盖困惑。要阐明权衡。**
 
-This is a minimalist Electron desktop application — a Pomodoro Timer with work, short break, and long break modes. The UI is built with plain HTML/CSS/JS (no framework).
+在开始实现之前：
+- 明确陈述你的假设。如果有不确定的地方，请提问。
+- 如果存在多种解释，列出它们，不要默默选择其一。
+- 如果存在更简单的解决方案，请指出来。在必要时提出异议。
+- 如果某些要求不清楚，立即停止。指出哪里令人困惑，并提问。
 
-## Common Commands
+## 2. 简洁至上
 
-- `npm start` — Run the app in development (launches Electron).
-- `npm run build` — Package the app with `electron-builder`. Output goes to `dist/`.
+**编写解决问题所需的最少代码。不要包含任何投机性内容。**
 
-There is no test suite or linter configured.
+-不要添加未被要求的功能。
+-不要为一次性代码创建抽象。
+-不要添加未被要求的“灵活性”或“可配置性”。
+-不要为不可能发生的场景编写错误处理代码。
+-如果你写了 200 行代码，而其实 50 行就能解决，请重写它。
 
-## Architecture
+自问：“资深工程师会认为这太复杂了吗？”如果答案是肯定的，那就简化它。
 
-### Process Model
+## 3. 精准修改
 
-- **Main process** (`main.js`): Creates a single fixed-size (`400x600`, non-resizable) `BrowserWindow` with `titleBarStyle: 'hiddenInset'`. It registers an IPC handler `show-notification` that triggers native Electron `Notification` popups.
-- **Renderer process** (`renderer.js`): All timer logic, UI updates, and state persistence live here. It communicates with the main process via `ipcRenderer.send('show-notification', ...)` to display completion notifications.
+**只修改你必须修改的部分。只清理你自己的烂摊子。**
 
-### Security Note
+在编辑现有代码时：
+-不要“改进” 无关的代码、注释或格式。
+-不要重构 没有坏掉的东西。
+-遵循 现有的代码风格，即使你个人会做得不一样。
+-如果你注意到无关的废弃代码，提及它，但不要删除它。
 
-`main.js` sets `nodeIntegration: true` and `contextIsolation: false`, and `renderer.js` uses `require('electron')` directly. This is a legacy Electron pattern. If adding untrusted content or third-party scripts, move to `contextIsolation: true` and use a preload script.
+在你的修改导致出现孤儿代码时：
+-移除 因你的修改而变得未使用的导入、变量、函数。
+-不要移除 之前就存在的废弃代码，除非被明确要求。
 
-### State & Persistence
+检验标准： 每一行被修改的代码都应直接追溯到用户的请求。
 
-- Timer state (minutes, seconds, running/paused) is held in memory in `renderer.js`.
-- User stats (`completedSessions`, `totalFocusMinutes`) are persisted to `localStorage`.
-- There is no backend or database.
+## 4. 目标驱动执行
 
-### Build Configuration
+**定义成功标准。循环直到验证。**
 
-`electron-builder` config is embedded in `package.json` under the `"build"` key. It bundles `main.js`, `index.html`, `styles.css`, `renderer.js`, and `notification.mp3` (referenced but not present in the repo). The Windows icon is at `static/icon.ico`.
+任务转化为可验证的目标：
+-“添加验证”→ 为无效输入编写测试，然后使其通过
+-“修复bug”→ “写一个测试来重现它，然后让它通过”
+-“重构X”→ “确保测试前后都通过”
+
+对于多步骤任务，请说明一个简短的计划：
+```
+1.[步骤]→ 验证：[检查]
+2.[步骤]→ 验证：[检查]
+3.[步骤]→ 验证：[检查]
+```
+
+强大的成功标准让你独立循环。弱标准（“让它发挥作用”）需要不断澄清。
+
+---
+
+**这些指导方针正在发挥作用 如果:** 差异中不必要的更改更少，由于过于复杂而导致的重写更少，澄清问题出现在实现之前，而不是错误之后。
